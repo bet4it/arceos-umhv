@@ -36,3 +36,5 @@ passthrough_devices = [
     # a003200.virtio_mmio virtio_mmio@a003200
     ["virtio_mmio", 0xa00_0000, 0xa00_0000, 0x4000, 0x1],
 ]
+
+gdb_port = 5555

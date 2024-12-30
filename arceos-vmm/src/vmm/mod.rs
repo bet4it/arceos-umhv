@@ -1,4 +1,6 @@
 mod config;
+#[cfg(feature = "gdb")]
+mod gdbserver;
 mod images;
 mod vcpus;
 mod vm_list;
@@ -26,7 +28,7 @@ pub fn init() {
     // Setup vcpus, spawn axtask for primary VCpu.
     info!("Setting up vcpus...");
     for vm in vm_list::get_vm_list() {
-        vcpus::setup_vm_primary_vcpu(vm);
+        vcpus::setup_vm_primary_vcpu(vm.clone());
     }
 }
 

@@ -1,5 +1,6 @@
 use alloc::collections::BTreeMap;
 use alloc::vec::Vec;
+use log::{debug, info, warn};
 
 use std::os::arceos::api;
 use std::os::arceos::modules::axtask;
@@ -128,7 +129,7 @@ pub(crate) fn notify_primary_vcpu(vm_id: usize) {
 ///
 /// # Arguments
 ///
-/// * `vm_id` - The ID of the VM on which the vCPU is to be booted.
+/// * `vm` - A reference to the VM on which the vCPU is to be booted.
 /// * `vcpu_id` - The ID of the vCPU to be booted.
 /// * `entry_point` - The entry point of the vCPU.
 /// * `arg` - The argument to be passed to the vCPU.
@@ -230,21 +231,25 @@ fn alloc_vcpu_task(vm: VMRef, vcpu: VCpuRef) -> AxTaskRef {
 /// When the vCPU first starts running, it waits for the VM to be in the running state.
 /// It then enters a loop where it runs the vCPU and handles the various exit reasons.
 fn vcpu_run() {
-    let curr = axtask::current();
-
-    let vm = curr.task_ext().vm.clone();
-    let vcpu = curr.task_ext().vcpu.clone();
+    let task = axtask::current();
+    let task_ext = task.task_ext();
+    let vm = task_ext.vm.clone();
+    let vcpu = task_ext.vcpu.clone();
     let vm_id = vm.id();
     let vcpu_id = vcpu.id();
 
-    info!("VM[{}] Vcpu[{}] waiting for running", vm.id(), vcpu.id());
+    info!("VM[{}] Vcpu[{}] waiting for running", vm.id(), vcpu_id);
     wait_for(vm_id, || vm.running());
 
-    info!("VM[{}] Vcpu[{}] running...", vm.id(), vcpu.id());
+    info!("VM[{}] Vcpu[{}] running...", vm.id(), vcpu_id);
+    #[cfg(feature = "gdb")]
+    {
+        info!("Initializing GDB server");
+        vm.gdbserver_loop();
+    }
 
     loop {
         match vm.run_vcpu(vcpu_id) {
-            // match vcpu.run() {
             Ok(exit_reason) => match exit_reason {
                 AxVCpuExitReason::Hypercall { nr, args } => {
                     debug!("Hypercall [{}] args {:x?}", nr, args);
@@ -287,6 +292,10 @@ fn vcpu_run() {
                 AxVCpuExitReason::SystemDown => {
                     warn!("VM[{}] run VCpu[{}] SystemDown", vm_id, vcpu_id);
                     ax_terminate()
+                }
+                AxVCpuExitReason::Breakpoint => {
+                    #[cfg(feature = "gdb")]
+                    vm.gdbserver_report();
                 }
                 _ => {
                     warn!("Unhandled VM-Exit");
