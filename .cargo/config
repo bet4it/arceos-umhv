@@ -4,9 +4,6 @@ axvm = { path = "crates/axvm" }
 [patch."https://github.com/arceos-hypervisor/axvcpu.git"]
 axvcpu = { path = "crates/axvcpu" }
 
-[patch."https://github.com/arceos-hypervisor/axaddrspace.git"]
-axaddrspace = { path = "crates/axaddrspace" }
-
 [patch."https://github.com/arceos-hypervisor/axvmconfig.git"]
 axvmconfig = { path = "crates/axvmconfig" }
 

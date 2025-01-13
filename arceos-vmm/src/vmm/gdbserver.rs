@@ -1,4 +1,4 @@
-use axstd::io::{prelude::*, Error, Result};
+use axstd::io::{Error, Result, prelude::*};
 use axstd::net::{IpAddr, TcpListener, TcpStream};
 use core::str::FromStr;
 use gdbstub::conn::{Connection, ConnectionExt};
