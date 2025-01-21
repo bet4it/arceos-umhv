@@ -9,7 +9,17 @@ use axvcpu::AxVCpuHal;
 use axvm::{AxVMHal, AxVMPerCpu};
 
 /// Implementation for `AxVMHal` trait.
-pub struct AxVMHalImpl;
+pub struct AxVMHalImpl {
+    paging_handler: axhal::paging::PagingHandlerImpl,
+}
+
+impl AxVMHalImpl {
+    pub fn new() -> Self {
+        Self {
+            paging_handler: axhal::paging::PagingHandlerImpl::new(),
+        }
+    }
+}
 
 impl AxVMHal for AxVMHalImpl {
     type PagingHandler = axhal::paging::PagingHandlerImpl;
@@ -36,6 +46,10 @@ impl AxVMHal for AxVMHalImpl {
         axalloc::global_allocator().dealloc_pages(base.as_usize(), size / PAGE_SIZE_4K)
     }
 
+    fn phys_to_virt(paddr: HostPhysAddr) -> HostVirtAddr {
+        axhal::mem::phys_to_virt(paddr)
+    }
+
     fn virt_to_phys(vaddr: HostVirtAddr) -> HostPhysAddr {
         axhal::mem::virt_to_phys(vaddr)
     }
@@ -47,18 +61,20 @@ impl AxVMHal for AxVMHalImpl {
 
 pub struct AxVCpuHalImpl;
 
+static VM_HAL: spin::Lazy<AxVMHalImpl> = spin::Lazy::new(|| AxVMHalImpl::new());
+
 impl AxVCpuHal for AxVCpuHalImpl {
     fn alloc_frame() -> Option<HostPhysAddr> {
-        <AxVMHalImpl as AxVMHal>::PagingHandler::alloc_frame()
+        VM_HAL.paging_handler.alloc_frame()
     }
 
     fn dealloc_frame(paddr: HostPhysAddr) {
-        <AxVMHalImpl as AxVMHal>::PagingHandler::dealloc_frame(paddr)
+        VM_HAL.paging_handler.dealloc_frame(paddr)
     }
 
     #[inline]
     fn phys_to_virt(paddr: HostPhysAddr) -> HostVirtAddr {
-        <AxVMHalImpl as AxVMHal>::PagingHandler::phys_to_virt(paddr)
+        VM_HAL.paging_handler.phys_to_virt(paddr)
     }
 
     fn virt_to_phys(vaddr: axaddrspace::HostVirtAddr) -> axaddrspace::HostPhysAddr {

@@ -35,3 +35,5 @@ passthrough_devices = [
         0x1,
     ],
 ]
+
+gdb_port = 5555
