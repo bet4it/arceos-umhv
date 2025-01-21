@@ -8,6 +8,8 @@ use axaddrspace::{HostPhysAddr, HostVirtAddr};
 use axvcpu::AxVCpuHal;
 use axvm::{AxVMHal, AxVMPerCpu};
 
+use crate::vmm;
+
 /// Implementation for `AxVMHal` trait.
 pub struct AxVMHalImpl {
     paging_handler: axhal::paging::PagingHandlerImpl,
@@ -117,6 +119,8 @@ pub(crate) fn enable_virtualization() {
                 ax_set_current_affinity(AxCpuMask::one_shot(cpu_id)).is_ok(),
                 "Initialize CPU affinity failed!"
             );
+
+            vmm::init_timer_percpu();
 
             let percpu = unsafe { AXVM_PER_CPU.current_ref_mut_raw() };
             percpu
