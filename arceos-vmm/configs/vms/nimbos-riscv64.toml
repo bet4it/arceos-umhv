@@ -3,20 +3,20 @@ name = "nimbos"
 vm_type = 1
 cpu_num = 1
 phys_cpu_sets = [1]
-entry_point = 0x9020_0000
+entry_point = 0x8020_0000
 # bios_path = ""
 # bios_load_addr = 
 # The location of image: "memory" | "fs"
 image_location = "fs" 
 kernel_path = "nimbos-riscv64.bin"
-kernel_load_addr = 0x9020_0000
+kernel_load_addr = 0x8020_0000
 # ramdisk_path = ""
 # ramdisk_load_addr = 0
 # disk_path = ""
 # Memory regions with format (`base_paddr`, `size`, `flags`, `map_type`).
 # For `map_type`, 0 means `MAP_ALLOC`, 1 means `MAP_IDENTICAL`.
 memory_regions = [
-    [0x9000_0000, 0x100_0000, 0xf, 0],  # Low RAM		16M	0b1111  R|W|EXECUTE|U
+    [0x8000_0000, 0x400_0000, 0xf, 0],  # Low RAM		16M	0b1111  R|W|EXECUTE|U
 ]
 
 # Emu_devices

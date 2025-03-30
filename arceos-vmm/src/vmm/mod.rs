@@ -11,6 +11,11 @@ use std::os::arceos::api::task::{self, AxWaitQueueHandle};
 use core::sync::atomic::AtomicUsize;
 use core::sync::atomic::Ordering;
 
+#[cfg(feature = "gdb")]
+use crate::vmm::gdbserver::GdbServer;
+#[cfg(feature = "gdb")]
+use alloc::boxed::Box;
+
 use crate::hal::{AxVCpuHalImpl, AxVMHalImpl};
 pub use timer::init_percpu as init_timer_percpu;
 
@@ -37,6 +42,16 @@ pub fn init() {
 pub fn start() {
     info!("VMM starting, booting VMs...");
     for vm in vm_list::get_vm_list() {
+        // let gdb_port = Some(5555);
+        // Initialize GDB server if port is configured
+        #[cfg(feature = "gdb")]
+        if let Some(port) = gdb_port {
+            info!("Initializing GDB server on port {}", port);
+            if let Ok(gdbserver) = GdbServer::new(port) {
+                info!("Started GDB server on port {}", port);
+                vm.gdbserver_init(Box::new(gdbserver));
+            }
+        }
         match vm.boot() {
             Ok(_) => {
                 vcpus::notify_primary_vcpu(vm.id());
